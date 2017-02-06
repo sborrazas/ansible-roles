@@ -1,0 +1,7 @@
+---
+- name: unicorn config file built
+  template:
+    src: "unicorn.rb.j2"
+    dest: "{{ release_dir }}/config/unicorn.rb"
+  tags:
+    - remote
