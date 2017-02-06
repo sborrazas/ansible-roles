@@ -1,0 +1,16 @@
+[Unit]
+Description={{ app_name }} unicorn server
+
+[Service]
+SyslogIdentifier={{ app_name }}
+Type=forking
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=RACK_ENV=deployment
+Environment=GEM_HOME={{ gems_dir }}
+PIDFile={{ unicorn_pid_file }}
+WorkingDirectory={{ app_dir }}
+Group={{ user }}
+User={{ user }}
+ExecStart=/usr/local/bin/unicorn -D -c "{{ app_dir }}/config/unicorn.rb" --env "{{ app_environment }}"
+ExecStop=/bin/kill -s QUIT $MAINPID
+ExecReload=/bin/kill -s USR2 $MAINPID

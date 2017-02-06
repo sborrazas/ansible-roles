@@ -1,0 +1,51 @@
+---
+- name: nginx-extras installed
+  apt:
+    name: nginx-extras
+    state: installed
+  become: True
+
+- name: write nginx.conf
+  template:
+    src: "nginx.conf.j2"
+    dest: "/etc/nginx/nginx.conf"
+  become: True
+  notify:
+    - nginx restarted
+
+- name: remove nginx default site
+  file:
+    path: "/etc/nginx/sites-enabled/default"
+    state: absent
+  become: True
+  notify:
+    - nginx restarted
+
+- name: setup nginx for app
+  template:
+    src: "nginx-site.conf.j2"
+    dest: "/etc/nginx/sites-available/{{ app_name }}.conf"
+  become: True
+  notify:
+    - nginx restarted
+
+- name: enables app for nginx
+  file:
+    src: "/etc/nginx/sites-available/{{ app_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ app_name }}.conf"
+    state: link
+  become: True
+  notify:
+    - nginx restarted
+
+- name: add unicorn as a systemd service
+  template:
+    src: "unicorn.service.j2"
+    dest: "/etc/systemd/system/{{ app_name }}-unicorn.service"
+    mode: 664
+  become: True
+  when: "{{ not static }}"
+  tags:
+    - remote
+  notify:
+    - systemd reloaded
