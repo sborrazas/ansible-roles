@@ -1,0 +1,75 @@
+---
+- name: create group
+  group:
+    name: "{{ user }}"
+    state: present
+  become: True
+
+- name: sudoers.d is enabled
+  lineinfile:
+    dest: "/etc/sudoers"
+    state: present
+    backup: True
+    regexp: "^#includedir /etc/sudoers.d"
+    line: "#includedir /etc/sudoers.d"
+  become: True
+
+- name: password-less sudo for group set up
+  template:
+    src: "sudoers.j2"
+    dest: "/etc/sudoers.d/{{ user }}"
+    owner: root
+    group: root
+    mode: 0440
+  become: True
+
+- name: user created
+  user:
+    name: "{{ user }}"
+    home: "/home/{{ user }}"
+    createhome: True
+    state: present
+    shell: "/bin/bash"
+    group: "{{ user }}"
+  become: True
+
+- name: ssh dir exists
+  file:
+    dest: "/home/{{ user }}/.ssh"
+    state: directory
+  become: True
+  become_user: "{{ user }}"
+
+- name: private key stored
+  copy:
+    content: "{{ private_key }}"
+    dest: "{{ private_key_path }}"
+    mode: 0600
+  become: True
+  become_user: "{{ user }}"
+
+- name: public key stored
+  copy:
+    content: "{{ public_key }}"
+    dest: "{{ public_key_path }}"
+    mode: 0600
+  become: True
+  become_user: "{{ user }}"
+
+- name: authorized_keys from root_user copied
+  # Won't work w/o sudo
+  command:
+    sudo cp "/home/{{ root_user }}/.ssh/authorized_keys" "/home/{{ user }}/.ssh/authorized_keys"
+  args:
+    creates: "/home/{{ user }}/.ssh/authorized_keys"
+  become: True
+  become_user: "{{ user }}"
+
+- name: authorized_keys file permission
+  file:
+    path: "/home/{{ user }}/.ssh/authorized_keys"
+    group: "{{ user }}"
+    owner: "{{ user }}"
+  become: True
+
+- include: hostname.yml
