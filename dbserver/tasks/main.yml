@@ -1,0 +1,56 @@
+---
+- name: postgres installed
+  apt:
+    name: "{{ item }}"
+  with_items:
+    - postgresql
+    - libpq-dev
+    - python-psycopg2
+  become: True
+  register: postgres_packages
+
+- name: postgres config file path fetched
+  command: |
+    psql -c "SHOW hba_file;" --pset="tuples_only=on" --pset="format=unaligned"
+  become: True
+  become_user: postgres
+  when: postgres_packages.changed
+  register: postgres_config
+
+- name: add connection config to local users
+  lineinfile:
+    dest: "{{ postgres_config.stdout }}"
+    line: "local all all trust"
+    state: present
+    regexp: "^local all all trust$"
+    insertbefore: "^# DO NOT DISABLE!"
+  become: True
+  when: postgres_packages.changed
+  register: connections_config
+
+- name: postgresql restarted
+  service:
+    name: postgresql
+    state: restarted
+  become: True
+  when: connections_config.changed
+
+- name: postgresql user created
+  postgresql_user:
+    name: "{{ database_user }}"
+    role_attr_flags: "CREATEDB,CREATEROLE"
+    password: "{{ database_password }}"
+    state: present
+  become: True
+  become_user: postgres
+
+- name: postgresql database created
+  postgresql_db:
+    name: "{{ database_name }}"
+    login_user: "{{ database_user }}"
+    login_password: "{{ database_password }}"
+    encoding: "UTF-8"
+    lc_collate: "en_US.UTF-8"
+    lc_ctype: "en_US.UTF-8"
+    template: "template0"
+  become: True
