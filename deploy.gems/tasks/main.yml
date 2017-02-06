@@ -1,0 +1,9 @@
+---
+- name: deploy.gems | project gems installed
+  gem:
+    name: "{{ item.name }}"
+    version: "{{ item.version }}"
+    user_install: False
+  with_items: "{{ gems }}"
+  environment:
+    GEM_HOME: "{{ directory }}"
