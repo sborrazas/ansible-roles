@@ -1,0 +1,25 @@
+---
+- name: ruby apt repository added
+  apt_repository:
+    repo: "ppa:brightbox/ruby-ng"
+  become: True
+
+- name: ruby installed
+  apt:
+    name: "{{ item }}"
+  become: True
+  with_items:
+    - ruby2.1
+    - ruby2.1-dev
+
+- name: base gems installed
+  gem:
+    name: "{{ item.name }}"
+    version: "{{ item.version }}"
+    user_install: False
+    state: present
+  become: True
+  with_items:
+    - { name: "rack", version: "1.6.0" }
+    - { name: "unicorn", version: "4.8.3" }
+    - { name: "shotgun", version: "0.9" }
