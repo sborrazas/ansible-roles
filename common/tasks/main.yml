@@ -1,0 +1,17 @@
+---
+- name: apt cache up to date
+  apt:
+    update_cache: True
+  become: True
+
+- name: project apt dependencies installed
+  apt:
+    name: "{{ item }}"
+  become: True
+  with_items:
+    - build-essential
+    - git
+    - curl
+    - libpcre3-dev
+    - python-apt
+    - python-pycurl
