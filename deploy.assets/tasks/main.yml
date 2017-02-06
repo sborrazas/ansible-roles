@@ -1,0 +1,9 @@
+---
+- name: deploy.assets | compile assets locally
+  local_action: command npm run dist
+
+- name: deploy.assets | upload assets
+  copy:
+    src: "{{ source_dir }}/{{ item }}"
+    dest: "{{ dest_dir }}/{{ item }}"
+  with_items: "{{ files }}"
