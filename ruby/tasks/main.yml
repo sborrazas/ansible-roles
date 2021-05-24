@@ -1,16 +1,21 @@
 ---
-- name: ruby apt repository added
-  apt_repository:
-    repo: "ppa:brightbox/ruby-ng"
-  become: True
+- name: "Create Ruby 2.2 installation dir"
+  file:
+    state: directory
+    path: /tmp/ruby2.2
 
-- name: ruby installed
-  apt:
-    name: "{{ item }}"
-  become: True
-  with_items:
-    - ruby2.2
-    - ruby2.2-dev
+- name: "Unarchive Ruby 2.2"
+  unarchive:
+    src: https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.6.tar.bz2
+    dest: /tmp/
+    remote_src: True
+    creates: /tmp/ruby-2.2.6
+
+- name: Install Ruby 2.2 from source
+  shell: ./configure && make && make install
+  args:
+    chdir: /tmp/ruby-2.2.6
+    creates: "/usr/local/include/ruby-2.2.0"
 
 - name: base gems installed
   gem:
