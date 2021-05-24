@@ -2,7 +2,7 @@
 - name: nginx-extras installed
   apt:
     name: nginx-extras
-    state: installed
+    state: present
   become: True
 
 - name: write nginx.conf
